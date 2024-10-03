@@ -1,19 +1,16 @@
-# Given an ElGamal encryption scheme with a public key (p, g, h) and a private key x, encrypt the 
-# message "Confidential Data". Then decrypt the ciphertext to retrieve the original message.
-
 from Crypto.Util.number import getPrime, inverse, bytes_to_long, long_to_bytes
 from Crypto.Random import random
 
-def generate_keys(bits=2048):
-    p = getPrime(bits)  
-    g = random.randint(2, p-1) 
-    x = random.randint(2, p-2) 
-    h = pow(g, x, p) 
+def generate_keys():
+    p = 7919
+    g = 2
+    h = 6465  
+    x=2999
     return (p, g, h), x
 
 def elgamal_encrypt(public_key, message):
     p, g, h = public_key
-    k = random.randint(2, p-2)  
+    k = 4  
     c1 = pow(g, k, p)  
     m = bytes_to_long(message)
     c2 = (m * pow(h, k, p)) % p  
@@ -26,8 +23,8 @@ def elgamal_decrypt(private_key, p, c1, c2):
     m = (c2 * s_inv) % p 
     return long_to_bytes(m)
 
-public_key, private_key = generate_keys(bits=2048)
-message = b"Confidential Data"
+public_key, private_key = generate_keys()
+message = b"Asymmetric Algorithms"
 
 ciphertext = elgamal_encrypt(public_key, message)
 print("Ciphertext:", ciphertext)

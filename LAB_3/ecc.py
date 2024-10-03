@@ -1,42 +1,51 @@
+#  Using ECC (Elliptic Curve Cryptography), encrypt the message "Secure Transactions" with the 
+# public key. Then decrypt the ciphertext with the private key to verify the original message. 
+
 from Crypto.PublicKey import ECC
-from Crypto.Cipher import AES
-from Crypto.Hash import SHA256
-from Crypto.Protocol.KDF import HKDF
-from Crypto.Random import get_random_bytes
-from Crypto.Signature import DSS
-import random
+import secrets
 
-random.seed(42)
-
-def fixed_rng(seed, length):
-    random.seed(seed)
-    return bytes(random.getrandbits(8) for _ in range(length))
-
-private_key = ECC.generate(curve='P-256', randfunc=lambda n: fixed_rng(42, n))
+# Generate ECC private and public keys
+private_key = ECC.generate(curve='P-256')
 public_key = private_key.public_key()
 
-def encrypt_message(public_key, message):
-    ephemeral_private_key = ECC.generate(curve='P-256', randfunc=lambda n: fixed_rng(123, n))
-    ephemeral_public_key = ephemeral_private_key.public_key()
-    shared_secret = ephemeral_private_key.d * public_key.pointQ
-    shared_secret_bytes = int(shared_secret.x).to_bytes(32, byteorder='big')
-    derived_key = HKDF(master=shared_secret_bytes, key_len=32, salt=None, hashmod=SHA256)
-    iv = fixed_rng(999, 16)
-    cipher_aes = AES.new(derived_key, AES.MODE_GCM, iv)
-    ciphertext, tag = cipher_aes.encrypt_and_digest(message)
-    return ephemeral_public_key, iv, ciphertext, tag
+# Display keys
+print(f"Private key: {private_key.export_key(format='PEM')}")
+print(f"Public key: {public_key.export_key(format='PEM')}")
 
-def decrypt_message(private_key, ephemeral_public_key, iv, ciphertext, tag):
-    shared_secret = private_key.d * ephemeral_public_key.pointQ
-    shared_secret_bytes = int(shared_secret.x).to_bytes(32, byteorder='big')
-    derived_key = HKDF(master=shared_secret_bytes, key_len=32, salt=None, hashmod=SHA256)
-    cipher_aes = AES.new(derived_key, AES.MODE_GCM, iv)
-    decrypted_message = cipher_aes.decrypt_and_verify(ciphertext, tag)
-    return decrypted_message
+# Elliptic Curve encryption (without hashing)
+def ecc_encrypt(public_key, message):
+    # Convert the message into an integer representation
+    message_int = int.from_bytes(message.encode('utf-8'), 'big')
+    
+    # Generate a random number k
+    k = secrets.randbelow(public_key.pointQ)
+    
+    # Ciphertext part 1: C1 = k * G (G is the base point on the curve)
+    C1 = k * public_key._curve.g
+    
+    # Ciphertext part 2: C2 = M + k * Pub (Pub is the public key point)
+    C2 = message_int + k * public_key.pointQ
+    
+    return C1, C2
 
-message = b"Secure Transactions"
-ephemeral_public_key, iv, ciphertext, tag = encrypt_message(public_key, message)
-print("Ciphertext (in hex):", ciphertext.hex())
+# Elliptic Curve decryption (without hashing)
+def ecc_decrypt(private_key, C1, C2):
+    # Decrypt using the private key: M = C2 - priv * C1
+    decrypted_message_point = C2 - private_key.d * C1
+    
+    # Convert the decrypted integer back into a string
+    message_bytes = decrypted_message_point.to_bytes((decrypted_message_point.bit_length() + 7) // 8, 'big')
+    
+    return message_bytes.decode('utf-8')
 
-decrypted_message = decrypt_message(private_key, ephemeral_public_key, iv, ciphertext, tag)
-print("Decrypted message:", decrypted_message.decode())
+# Example usage:
+message = "Secure Transactions"
+print(f"Original Message: {message}")
+
+# Encrypt the message using the public key
+C1, C2 = ecc_encrypt(public_key, message)
+print(f"Ciphertext (C1, C2): {C1}, {C2}")
+
+# Decrypt the ciphertext using the private key
+decrypted_message = ecc_decrypt(private_key, C1, C2)
+print(f"Decrypted Message: {decrypted_message}")

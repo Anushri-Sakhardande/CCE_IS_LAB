@@ -22,6 +22,7 @@ def start_server():
 
         # Receive data from the client
         data = conn.recv(1024)
+        #data+="a"
         if not data:
             break
         print(f"Data received: {data.decode()}")
