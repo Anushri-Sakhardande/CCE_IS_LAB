@@ -1,14 +1,16 @@
+#  Encrypt the message "Classified Text" using Triple DES with the key 
+# "1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF". Then decrypt the ciphertext to 
+# verify the original message. 
+
 from Crypto.Cipher import DES3
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
-import binascii
 
 # Define the message
 message = "Classified Text"
 
 # Triple DES key (24 bytes / 48 hex characters)
-key_hex = "1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF"
-key = binascii.unhexlify(key_hex)
+key = get_random_bytes(24)
 
 # Define the block size for DES3
 block_size = DES3.block_size

@@ -1,3 +1,9 @@
+# Using DES and AES(128, 192, and 256 bits key).encrypt the five different messages using same 
+# key. a. Consider different modes of operation b. Plot the graph which shows execution time taken by 
+# each technique. c. Compare time taken by different modes of operation 
+
+
+
 from Crypto.Cipher import DES, AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
