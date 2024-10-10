@@ -1,108 +1,52 @@
+from Crypto.Util import number
 import random
-import math
 
-class Paillier:
-    def __init__(self, bit_length):
-        self.bit_length = bit_length
-        self.p = self.generate_prime()
-        self.q = self.generate_prime()
-        self.n = self.p * self.q
-        self.lambda_n = self.lcm(self.p - 1, self.q - 1)
-        self.g = self.n + 1  # Often chosen in Paillier cryptosystem
-        self.mu = self.modinv(self.l_function(pow(self.g, self.lambda_n, self.n**2)), self.n)
-    
-    # Generate a random prime number with bit_length
-    def generate_prime(self):
-        while True:
-            prime_candidate = random.getrandbits(self.bit_length)
-            if self.is_prime(prime_candidate):
-                return prime_candidate
+#Generates a public/private key pair for Paillier encryption
+def generate_keypair(bits=512):
+    p = number.getPrime(bits)
+    q = number.getPrime(bits)
+    n = p * q
+    g = n + 1  # g = n + 1 is often used in practical implementations
+    lambda_n = (p - 1) * (q - 1)  # λ(n) = (p - 1)(q - 1)
+    mu = number.inverse(lambda_n, n)  # Modular inverse of λ(n) modulo n
+    return (n, g), (lambda_n, mu)
 
-    # Simple primality test (Miller-Rabin could be used for stronger checking)
-    def is_prime(self, n, k=40):  # Number of iterations
-        if n <= 1:
-            return False
-        if n <= 3:
-            return True
-        if n % 2 == 0:
-            return False
+#Encrypts a message using the Paillier encryption scheme
+def encrypt(public_key, message):
+    n, g = public_key
+    r = random.randint(1, n - 1)  # Random value for encryption
+    ciphertext = (pow(g, message, n * n) * pow(r, n, n * n)) % (n * n)
+    return ciphertext
 
-        # Find r and s such that n - 1 = 2^s * r
-        r, s = n - 1, 0
-        while r % 2 == 0:
-            r //= 2
-            s += 1
-
-        for _ in range(k):
-            a = random.randint(2, n - 2)
-            x = pow(a, r, n)
-            if x == 1 or x == n - 1:
-                continue
-            for _ in range(s - 1):
-                x = pow(x, 2, n)
-                if x == n - 1:
-                    break
-            else:
-                return False
-        return True
-    
-    # Calculate least common multiple
-    def lcm(self, a, b):
-        return abs(a * b) // math.gcd(a, b)
-
-    # Modular inverse
-    def modinv(self, a, m):
-        g, x, _ = self.egcd(a, m)
-        if g != 1:
-            raise Exception('Modular inverse does not exist')
-        return x % m
-
-    # Extended Euclidean algorithm
-    def egcd(self, a, b):
-        if a == 0:
-            return b, 0, 1
-        g, y, x = self.egcd(b % a, a)
-        return g, x - (b // a) * y, y
-
-    # L function for Paillier decryption
-    def l_function(self, u):
-        return (u - 1) // self.n
-
-    # Encryption
-    def encrypt(self, m):
-        r = random.randint(1, self.n - 1)  # Random value r < n
-        c = (pow(self.g, m, self.n**2) * pow(r, self.n, self.n**2)) % self.n**2
-        return c
-
-    # Decryption
-    def decrypt(self, c):
-        u = pow(c, self.lambda_n, self.n**2)
-        l_of_u = self.l_function(u)
-        m = (l_of_u * self.mu) % self.n
-        return m
-    
-    # Homomorphic addition of two encrypted values
-    def homomorphic_addition(self, c1, c2):
-        return (c1 * c2) % self.n**2
+#Decrypts a ciphertext using the Paillier encryption scheme
+def decrypt(private_key, public_key, ciphertext):
+    n, g = public_key
+    lambda_n, mu = private_key
+    u = pow(ciphertext, lambda_n, n * n)
+    low = (u - 1) // n
+    message = (low * mu) % n
+    return message
 
 
-# Example of Paillier encryption and homomorphic addition
-if __name__ == "__main__":
-    # Initialize the Paillier cryptosystem with 512-bit primes
-    paillier = Paillier(bit_length=512)
+# Generate key pair
+public_key, private_key = generate_keypair(bits=512)
 
-    # Encrypt two integers
-    m1 = 15
-    m2 = 25
-    c1 = paillier.encrypt(m1)
-    c2 = paillier.encrypt(m2)
-    print(f"Ciphertext of {m1}: {c1}")
-    print(f"Ciphertext of {m2}: {c2}")
+# Encrypt integers
+a = 15
+b = 25
+ciphertext_a = encrypt(public_key, a)
+ciphertext_b = encrypt(public_key, b)
 
-    # Perform homomorphic addition on the encrypted values
-    c_add = paillier.homomorphic_addition(c1, c2)
-    print(f"Ciphertext of addition (15 + 25): {c_add}")
+# Perform additive homomorphic operation (add ciphertexts)
+ciphertext_sum = (ciphertext_a * ciphertext_b) % (public_key[0] * public_key[0])
 
-    # Decrypt the result
-    decrypted_add = paillier.decrypt(c_add)
-    print(f"Decrypted result of addition: {decrypted_add}")
+# Decrypt the result
+decrypted_sum = decrypt(private_key, public_key, ciphertext_sum)
+
+# Print results
+print(f"Ciphertext of a: {ciphertext_a}")
+print(f"Ciphertext of b: {ciphertext_b}")
+print(f"Ciphertext of a + b: {ciphertext_sum}")
+print(f"Decrypted sum: {decrypted_sum}")
+print(f"Expected sum: {a + b}")
+

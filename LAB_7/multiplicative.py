@@ -1,88 +1,44 @@
-import random
-import math
+from Crypto.PublicKey import RSA
 
-# Function to compute gcd
-def gcd(a, b):
-    while b != 0:
-        a, b = b, a % b
-    return a
+# Generates a public/private key pair
+def generate_keypair(nlength=1024):
+    key = RSA.generate(nlength)
+    pub_key = key.publickey()
+    return pub_key, key
 
-# Function to compute modular inverse
-def modinv(a, m):
-    g, x, _ = egcd(a, m)
-    if g != 1:
-        raise Exception('Modular inverse does not exist')
-    return x % m
+# Encrypts a message using the public key
+def encrypt(pub_key, message):
+    e = pub_key.e
+    n = pub_key.n
+    ciphertext = pow(message, e, n)
+    return ciphertext
 
-# Extended Euclidean Algorithm
-def egcd(a, b):
-    if a == 0:
-        return b, 0, 1
-    g, y, x = egcd(b % a, a)
-    return g, x - (b // a) * y, y
-
-# Function to generate prime numbers (basic primality check)
-def is_prime(n):
-    if n < 2:
-        return False
-    for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-def generate_prime_candidate(bit_length):
-    # Generate random prime candidate
-    p = random.getrandbits(bit_length)
-    # Apply a mask to ensure it's odd and has the correct bit length
-    p |= (1 << bit_length - 1) | 1
-    return p
-
-def generate_prime(bit_length):
-    p = generate_prime_candidate(bit_length)
-    while not is_prime(p):
-        p = generate_prime_candidate(bit_length)
-    return p
-
-# RSA class for encryption, decryption, and homomorphic property
-class RSA:
-    def __init__(self, bit_length):
-        self.p = generate_prime(bit_length)
-        self.q = generate_prime(bit_length)
-        self.n = self.p * self.q
-        self.phi_n = (self.p - 1) * (self.q - 1)
-        self.e = 65537  # Commonly used public exponent
-        self.d = modinv(self.e, self.phi_n)
-
-    # Encryption function: c = (m^e) mod n
-    def encrypt(self, m):
-        return pow(m, self.e, self.n)
-
-    # Decryption function: m = (c^d) mod n
-    def decrypt(self, c):
-        return pow(c, self.d, self.n)
-
-    # Multiplicative homomorphic property: c1 * c2 mod n = E(m1 * m2)
-    def homomorphic_multiplication(self, c1, c2):
-        return (c1 * c2) % self.n
+# Decrypts a ciphertext using the private key
+def decrypt(priv_key, ciphertext):
+    d = priv_key.d
+    n = priv_key.n
+    message = pow(ciphertext, d, n)
+    return message
 
 
-# Example of RSA encryption and homomorphic multiplication
-if __name__ == "__main__":
-    # Initialize the RSA cryptosystem with 512-bit primes
-    rsa = RSA(bit_length=512)
+# Generate key pair
+pub_key, priv_key = generate_keypair()
 
-    # Encrypt two integers
-    m1 = 7
-    m2 = 3
-    c1 = rsa.encrypt(m1)
-    c2 = rsa.encrypt(m2)
-    print(f"Ciphertext of {m1}: {c1}")
-    print(f"Ciphertext of {m2}: {c2}")
+# Encrypt integers
+a = 7
+b = 3
+ciphertext_a = encrypt(pub_key, a)
+ciphertext_b = encrypt(pub_key, b)
 
-    # Perform homomorphic multiplication on the encrypted values
-    c_mult = rsa.homomorphic_multiplication(c1, c2)
-    print(f"Ciphertext of multiplication (7 * 3): {c_mult}")
+# Perform multiplicative homomorphic operation (multiply ciphertexts)
+ciphertext_product = (ciphertext_a * ciphertext_b) % pub_key.n
 
-    # Decrypt the result
-    decrypted_mult = rsa.decrypt(c_mult)
-    print(f"Decrypted result of multiplication: {decrypted_mult}")
+# Decrypt the result
+decrypted_product = decrypt(priv_key, ciphertext_product)
+
+# Print results
+print(f"Ciphertext of a: {ciphertext_a}")
+print(f"Ciphertext of b: {ciphertext_b}")
+print(f"Ciphertext of a * b: {ciphertext_product}")
+print(f"Decrypted product: {decrypted_product}")
+print(f"Expected product: {a * b}")
