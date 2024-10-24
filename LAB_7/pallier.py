@@ -1,3 +1,10 @@
+# Implement the Paillier encryption scheme in Python. Encrypt two integers (e.g., 15 and 25) 
+# using your implementation of the Paillier encryption scheme. Print the ciphertexts. Perform 
+# an addition operation on the encrypted integers without decrypting them. Print the result of 
+# the addition in encrypted form. Decrypt the result of the addition and verify that it matches 
+# the sum of the original integers.
+
+
 from Crypto.Util import number
 import random
 

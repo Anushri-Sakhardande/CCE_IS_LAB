@@ -1,3 +1,6 @@
+# remember this is for the string "brown" and the fixed r value of 42
+
+
 import random
 import hashlib
 from Crypto.Util import number

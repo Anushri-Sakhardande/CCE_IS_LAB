@@ -1,3 +1,10 @@
+#Utilize  the  multiplicative  homomorphic  property  of  RSA  encryption.  Implement  a  basic 
+# RSA  encryption  scheme  in  Python.  Encrypt  two  integers  (e.g.,  7  and  3)  using  your 
+# implementation of the RSA encryption scheme. Print the ciphertexts. Perform a 
+# multiplication operation on the encrypted integers without decrypting them. Print the result 
+# of the multiplication in encrypted form. Decrypt the result of the multiplication and verify 
+# that it matches the product of the original integers.
+
 from Crypto.PublicKey import RSA
 
 # Generates a public/private key pair
