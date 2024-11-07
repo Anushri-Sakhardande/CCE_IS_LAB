@@ -1,0 +1,37 @@
+Paillier Cryptosystem:
+The Paillier cryptosystem has the following homomorphic properties:
+
+Additive Homomorphism:
+
+Given two ciphertexts c1 = Enc(m1) and c2 = Enc(m2), the product of the ciphertexts is equal to the encryption of the sum of the plaintexts:
+c1 * c2 = Enc(m1 + m2)
+
+
+Scalar Multiplication Homomorphism:
+
+Given a ciphertext c = Enc(m) and a scalar k, raising the ciphertext to the power of k is equal to the encryption of the product of the plaintext and the scalar:
+c^k = Enc(k * m)
+
+These homomorphic properties allow for operations on the ciphertexts that correspond to operations on the plaintexts, without the need to decrypt the ciphertexts.
+
+ElGamal Cryptosystem:
+The ElGamal cryptosystem has the following homomorphic property:
+
+Multiplicative Homomorphism:
+
+Given two ciphertexts (c1, d1) = Enc(m1) and (c2, d2) = Enc(m2), the component-wise product of the ciphertexts is equal to the encryption of the product of the plaintexts:
+(c1 * c2, d1 * d2) = Enc(m1 * m2)
+
+This means that multiplying the ciphertexts corresponds to multiplying the plaintexts, without the need to decrypt the ciphertexts.
+
+RSA Cryptosystem:
+The RSA cryptosystem has the following homomorphic property:
+
+Multiplicative Homomorphism:
+
+Given two ciphertexts c1 = Enc(m1) and c2 = Enc(m2), the product of the ciphertexts is equal to the encryption of the product of the plaintexts:
+c1 * c2 = Enc(m1 * m2)
+
+
+
+This means that multiplying the ciphertexts corresponds to multiplying the plaintexts, without the need to decrypt the ciphertexts.

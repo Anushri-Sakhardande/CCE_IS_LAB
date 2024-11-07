@@ -1,7 +1,5 @@
 ## DOESN'T WORK
 
-
-
 import time
 from Crypto.PublicKey import RSA
 from Crypto.Util.number import bytes_to_long, long_to_bytes, inverse
